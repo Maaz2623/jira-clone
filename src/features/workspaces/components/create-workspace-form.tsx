@@ -19,13 +19,17 @@ import { useCreateWorkspace } from "../api/use-create-workspace";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Image from "next/image";
 import { ImageIcon } from "@radix-ui/react-icons";
+import { useCreateWorkspaceModal } from "../hooks/use-create-workspace-modal";
+import { useRouter } from "next/navigation";
 
 interface CreateWorkspaceFormProps {
-  onCancel: () => void;
+  onCancel?: () => void;
 }
 
 const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
   const { mutate, isPending } = useCreateWorkspace();
+
+  const { close } = useCreateWorkspaceModal();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -36,6 +40,7 @@ const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
     },
   });
 
+  const router = useRouter();
   const onSubmit = (values: z.infer<typeof createWorkspaceSchema>) => {
     const finalValues = {
       ...values,
@@ -46,9 +51,12 @@ const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
       {
         form: finalValues,
       },
+
       {
-        onSuccess: () => {
+        onSuccess: async ({ data }) => {
+          await close();
           form.reset();
+          router.push(`/workspaces/${data.$id}`);
         },
       }
     );
